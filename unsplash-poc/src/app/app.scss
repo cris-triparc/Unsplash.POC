@@ -31,6 +31,14 @@ header {
   margin-bottom: 3rem;
 }
 
+.search-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 600px;
+  gap: 0.5rem;
+}
+
 .search-bar {
   display: flex;
   gap: 0.5rem;
@@ -189,5 +197,76 @@ header {
     &:hover {
       background: #333;
     }
+  }
+
+  @media (width >= 770px) {
+    overflow-y: auto;
+  }
+}
+
+.endpoint-info {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  color: #495057;
+  width: 100%;
+
+  .method {
+    font-weight: bold;
+    color: #0c85d0; // Postman-like blue for GET
+    margin-right: 0.5rem;
+
+    &.post {
+      color: #e67e22; // Postman-like orange for POST
+    }
+  }
+
+  .route {
+    word-break: break-all;
+  }
+
+  .params {
+    display: block;
+    margin-top: 0.25rem;
+    color: #6c757d;
+    font-style: italic;
+  }
+}
+
+.json-response {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 1rem;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 0.8rem;
+  max-height: 250px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #2d2d2d;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #4a4a4a;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #5a5a5a;
+  }
+
+  @media (width >= 770px) {
+    min-height: 180px;
   }
 }

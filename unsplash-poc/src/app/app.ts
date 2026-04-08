@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterOutlet } from '@angular/router';
+import { JsonPipe } from '@angular/common';
 import { UnsplashService } from './services/unsplash.service';
 import { UnsplashPhoto } from './models/unsplash';
 import { PhotoCardComponent } from './components/photo-card.component';
@@ -19,7 +20,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, PhotoCardComponent, ReactiveFormsModule],
+  imports: [RouterOutlet, PhotoCardComponent, ReactiveFormsModule, JsonPipe],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

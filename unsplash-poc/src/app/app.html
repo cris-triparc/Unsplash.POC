@@ -5,20 +5,29 @@
   </header>
 
   <section class="search-section">
-    <div class="search-bar">
-      <input
-        type="text"
-        [formControl]="searchControl"
-        placeholder="Search for photos..."
-        aria-label="Search for photos"
-      />
-      <button (click)="search()" [disabled]="loading()">
-        @if (loading()) {
-          Searching...
-        } @else {
-          Search
+    <div class="search-container">
+      <div class="search-bar">
+        <input
+          type="text"
+          [formControl]="searchControl"
+          placeholder="Search for photos..."
+          aria-label="Search for photos"
+        />
+        <button (click)="search()" [disabled]="loading()">
+          @if (loading()) {
+            Searching...
+          } @else {
+            Search
+          }
+        </button>
+      </div>
+      <div class="endpoint-info">
+        <span class="method">GET</span>
+        <span class="route">https://api.unsplash.com/search/photos</span>
+        @if (query()) {
+          <span class="params">?query={{ query() }}&page={{ page() }}&per_page=12</span>
         }
-      </button>
+      </div>
     </div>
   </section>
 
@@ -52,7 +61,11 @@
           <img [src]="photo.urls.regular" [alt]="photo.alt_description" />
         </div>
         <div class="modal-info">
-          <h2>{{ photo.description || 'Untitled' }}</h2>
+          <h2>{{ photo.description || photo.alt_description || 'Untitled' }}</h2>
+          <div class="endpoint-info">
+            <span class="method">GET</span>
+            <span class="route">https://api.unsplash.com/photos/{{ photo.id }}</span>
+          </div>
           <p class="attribution">
             Photo by
             <a [href]="photo.user.links.html + '?utm_source=unsplash_poc&utm_medium=referral'" target="_blank">
@@ -63,10 +76,16 @@
               Unsplash
             </a>
           </p>
+
+          <pre class="json-response"><code>{{ photo | json }}</code></pre>
           <div class="actions">
             <button class="download-btn" (click)="downloadPhoto(photo)">
               Download Photo
             </button>
+            <div class="endpoint-info">
+              <span class="method">GET</span>
+              <span class="route">{{ photo.links.download_location }}</span>
+            </div>
           </div>
         </div>
       </div>
