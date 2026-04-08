@@ -1,0 +1,75 @@
+<main class="container">
+  <header>
+    <h1>Unsplash POC</h1>
+    <p>A simple search and selection tool using the Unsplash API.</p>
+  </header>
+
+  <section class="search-section">
+    <div class="search-bar">
+      <input
+        type="text"
+        [formControl]="searchControl"
+        placeholder="Search for photos..."
+        aria-label="Search for photos"
+      />
+      <button (click)="search()" [disabled]="loading()">
+        @if (loading()) {
+          Searching...
+        } @else {
+          Search
+        }
+      </button>
+    </div>
+  </section>
+
+  @if (photos().length > 0) {
+    <section class="results-section">
+      <div class="photo-grid">
+        @for (photo of photos(); track photo.id) {
+          <app-photo-card [photo]="photo" (select)="selectPhoto($event)"></app-photo-card>
+        }
+      </div>
+
+      <div #bottomObserver class="scroll-trigger">
+        @if (loadingMore()) {
+          <p>Loading more photos...</p>
+        }
+      </div>
+    </section>
+  } @else if (!loading() && photos().length === 0 && query().trim() !== '') {
+    <p class="no-results">No photos found for "{{ query() }}". Try another search.</p>
+  }
+
+  <router-outlet></router-outlet>
+</main>
+
+@if (selectedPhoto(); as photo) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <button class="close-btn" (click)="closeModal()" aria-label="Close modal">&times;</button>
+      <div class="modal-body">
+        <div class="modal-image">
+          <img [src]="photo.urls.regular" [alt]="photo.alt_description" />
+        </div>
+        <div class="modal-info">
+          <h2>{{ photo.description || 'Untitled' }}</h2>
+          <p class="attribution">
+            Photo by
+            <a [href]="photo.user.links.html + '?utm_source=unsplash_poc&utm_medium=referral'" target="_blank">
+              {{ photo.user.name }}
+            </a>
+            on
+            <a href="https://unsplash.com/?utm_source=unsplash_poc&utm_medium=referral" target="_blank">
+              Unsplash
+            </a>
+          </p>
+          <div class="actions">
+            <button class="download-btn" (click)="downloadPhoto(photo)">
+              Download Photo
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}
