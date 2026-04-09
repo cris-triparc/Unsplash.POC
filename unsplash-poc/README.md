@@ -1,5 +1,15 @@
 # UnsplashPoc
 
+UnsplashPoc is a Proof of Concept (POC) application designed to demonstrate the integration of the Unsplash API. It provides a user interface to search for, view, and interact with images from Unsplash's extensive library.
+
+## Key Features
+
+- **Search:** Search for high-quality photos using keywords.
+- **Infinite Scroll:** Browse through results seamlessly.
+- **Photo Details:** View detailed information for each photo in a dedicated view.
+- **Download Integration:** Download photos with proper API tracking, ensuring compliance with Unsplash API guidelines.
+- **Backend Proxy:** A Node.js backend serves as a secure proxy for API requests, handling authentication and request forwarding.
+
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.6.
 
 ## Development server
