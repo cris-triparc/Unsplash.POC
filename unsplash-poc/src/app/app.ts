@@ -100,12 +100,6 @@ export class App implements OnDestroy {
       .subscribe(() => {
         this.search();
       });
-
-    this.customSizeControl.valueChanges
-      .pipe(debounceTime(500), distinctUntilChanged(), takeUntilDestroyed())
-      .subscribe((value) => {
-        this.resizeImage(value);
-      });
   }
 
   private setupObserver(el: HTMLElement) {
@@ -209,10 +203,10 @@ export class App implements OnDestroy {
     this.customWidth.set(null);
   }
 
-  resizeImage(value: number) {
+  resizeImage() {
     const photo = this.selectedPhoto();
     if (!photo) return;
-    const width = Number(value);
+    const width = Number(this.customSizeControl.value);
 
     if (!Number.isFinite(width) || width <= 0) {
       this.resetImageUrl();

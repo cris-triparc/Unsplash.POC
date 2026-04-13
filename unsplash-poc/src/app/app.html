@@ -92,6 +92,10 @@
               (focusin)="$event.target?.select()"
               [formControl]="customSizeControl"
               placeholder="Custom width" />
+
+              <button class="search" (click)="resizeImage()">
+                Send
+              </button>
           </div>
 
           <pre class="json-response"><code>{{ photo | json }}</code></pre>
