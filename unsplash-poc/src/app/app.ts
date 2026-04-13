@@ -14,13 +14,13 @@ import { JsonPipe } from '@angular/common';
 import { UnsplashService } from './services/unsplash.service';
 import { UnsplashPhoto } from './models/unsplash';
 import { PhotoCardComponent } from './components/photo-card.component';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, PhotoCardComponent, ReactiveFormsModule, JsonPipe],
+  imports: [RouterOutlet, PhotoCardComponent, ReactiveFormsModule, FormsModule, JsonPipe],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,16 +30,18 @@ export class App implements OnDestroy {
 
   readonly query = signal('');
   readonly searchControl = new FormControl('', { nonNullable: true });
+  readonly customSizeControl = new FormControl(0, { nonNullable: true });
   readonly photos = signal<UnsplashPhoto[]>([]);
   readonly loading = signal(false);
   readonly loadingMore = signal(false);
   readonly selectedPhoto = signal<UnsplashPhoto | null>(null);
   readonly currentImageUrl = signal<string | null>(null);
-  readonly currentSize = signal<keyof UnsplashPhoto['urls']>('regular');
+  readonly currentSize = signal<keyof UnsplashPhoto['urls'] | null>('regular');
   readonly currentDimensions = signal({
     width: 0,
     height: 0,
   });
+  readonly customWidth = signal<number | null>(null);
   readonly page = signal(1);
   readonly totalPages = signal(0);
   readonly sizes: (keyof UnsplashPhoto['urls'])[] = ['raw', 'full', 'small', 'thumb', 'small_s3'];
@@ -97,6 +99,12 @@ export class App implements OnDestroy {
       .pipe(debounceTime(500), distinctUntilChanged(), takeUntilDestroyed())
       .subscribe(() => {
         this.search();
+      });
+
+    this.customSizeControl.valueChanges
+      .pipe(debounceTime(500), distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe((value) => {
+        this.resizeImage(value);
       });
   }
 
@@ -189,6 +197,7 @@ export class App implements OnDestroy {
   setImageUrl(size: keyof UnsplashPhoto['urls'], url: string) {
     this.currentImageUrl.set(url);
     this.currentSize.set(size);
+    this.customWidth.set(null);
   }
 
   resetImageUrl() {
@@ -197,6 +206,32 @@ export class App implements OnDestroy {
       this.currentImageUrl.set(photo.urls.regular);
     }
     this.currentSize.set('regular');
+    this.customWidth.set(null);
+  }
+
+  resizeImage(value: number) {
+    const photo = this.selectedPhoto();
+    if (!photo) return;
+    const width = Number(value);
+
+    if (!Number.isFinite(width) || width <= 0) {
+      this.resetImageUrl();
+      return;
+    }
+
+    const roundedWidth = Math.round(width);
+    this.customWidth.set(roundedWidth);
+    this.unsplashService.resizePhoto(photo.urls.raw, roundedWidth).subscribe({
+      next: (blob) => {
+        const objectUrl = URL.createObjectURL(blob);
+        this.currentImageUrl.set(objectUrl);
+        this.currentSize.set(null);
+      },
+      error: (error) => {
+        console.error('Error resizing image', error);
+        this.resetImageUrl();
+      },
+    });
   }
 
   closeModal() {
@@ -204,6 +239,7 @@ export class App implements OnDestroy {
     this.currentImageUrl.set(null);
     this.currentSize.set('regular');
     this.currentDimensions.set({ width: 0, height: 0 });
+    this.customWidth.set(null);
   }
 
   downloadPhoto(photo: UnsplashPhoto) {

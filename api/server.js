@@ -17,6 +17,34 @@ const client = axios.create({
     }
 });
 
+function buildResizedUnsplashUrl(rawUrl, width) {
+    const parsed = new URL(rawUrl);
+
+    if (parsed.protocol !== 'https:') {
+        throw new Error('Only https URLs are allowed');
+    }
+
+    if (parsed.hostname !== 'images.unsplash.com') {
+        throw new Error('Only images.unsplash.com URLs are allowed');
+    }
+
+    const w = Number(width);
+    if (!Number.isFinite(w) || w <= 0) {
+        throw new Error('Invalid width');
+    }
+
+    // Keep existing Unsplash params like ixid / ixlib
+    parsed.searchParams.set('w', String(Math.round(w)));
+    parsed.searchParams.set('fit', 'max');
+    parsed.searchParams.set('auto', 'format');
+    parsed.searchParams.set('q', '80');
+
+    // Do NOT set height if you want proportional scaling
+    parsed.searchParams.delete('h');
+
+    return parsed.toString();
+}
+
 app.get('/api/search/photos', async (req, res) => {
     try {
         const { query, page = 1, per_page = 12, orientation } = req.query;
@@ -68,6 +96,39 @@ app.post('/api/photos/:id/download', async (req, res) => {
     } catch (error) {
         res.status(500).json({
             message: 'Error tracking download',
+            detail: error.response?.data || error.message
+        });
+    }
+});
+
+app.get('/api/images/resize', async (req, res) => {
+    try {
+        const { rawUrl, width } = req.query;
+
+        if (!rawUrl || !width) {
+            return res.status(400).json({
+                message: 'rawUrl and width are required'
+            });
+        }
+
+        const resizedUrl = buildResizedUnsplashUrl(rawUrl, width);
+
+        const response = await axios.get(resizedUrl, {
+            responseType: 'stream'
+        });
+
+        if (response.headers['content-type']) {
+            res.setHeader('Content-Type', response.headers['content-type']);
+        }
+
+        if (response.headers['cache-control']) {
+            res.setHeader('Cache-Control', response.headers['cache-control']);
+        }
+
+        response.data.pipe(res);
+    } catch (error) {
+        res.status(400).json({
+            message: 'Error proxying resized image',
             detail: error.response?.data || error.message
         });
     }

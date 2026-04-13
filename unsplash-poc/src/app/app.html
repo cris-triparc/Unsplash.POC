@@ -85,6 +85,15 @@
             & height: {{ currentDimensions().height }} px
           </p>
 
+          <div class="custom-width">
+            <input
+              type="number"
+              min="1"
+              (focusin)="$event.target?.select()"
+              [formControl]="customSizeControl"
+              placeholder="Custom width" />
+          </div>
+
           <pre class="json-response"><code>{{ photo | json }}</code></pre>
           <div class="actions">
             <button class="download-btn" (click)="downloadPhoto(photo)">

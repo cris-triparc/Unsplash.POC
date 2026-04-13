@@ -11,11 +11,13 @@ export class UnsplashService {
   private readonly baseUrl = 'http://localhost:3000/api';
 
   searchPhotos(query: string, page = 1, perPage = 12): Observable<UnsplashSearchResponse> {
-    const params = new HttpParams()
-      .set('query', query)
-      .set('page', page.toString())
-      .set('per_page', perPage.toString());
-
+    const params = new HttpParams({
+      fromObject: {
+        query,
+        page,
+        per_page: perPage
+      }
+    });
     return this.http.get<UnsplashSearchResponse>(`${this.baseUrl}/search/photos`, { params });
   }
 
@@ -25,5 +27,10 @@ export class UnsplashService {
 
   trackDownload(id: string): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.baseUrl}/photos/${id}/download`, {});
+  }
+
+  resizePhoto(rawUrl: string, width: number): Observable<Blob> {
+    const params = new HttpParams({ fromObject: { rawUrl, width } });
+    return this.http.get(`${this.baseUrl}/images/resize`, { params, responseType: 'blob' });
   }
 }
