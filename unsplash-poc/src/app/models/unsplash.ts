@@ -16,6 +16,7 @@ export interface UnsplashPhoto {
     regular: string;
     small: string;
     thumb: string;
+    small_s3: string;
   };
   links: {
     html: string;

@@ -34,8 +34,15 @@ export class App implements OnDestroy {
   readonly loading = signal(false);
   readonly loadingMore = signal(false);
   readonly selectedPhoto = signal<UnsplashPhoto | null>(null);
+  readonly currentImageUrl = signal<string | null>(null);
+  readonly currentSize = signal<keyof UnsplashPhoto['urls']>('regular');
+  readonly currentDimensions = signal({
+    width: 0,
+    height: 0,
+  });
   readonly page = signal(1);
   readonly totalPages = signal(0);
+  readonly sizes: (keyof UnsplashPhoto['urls'])[] = ['raw', 'full', 'small', 'thumb', 'small_s3'];
 
   private readonly bottomObserver = viewChild<ElementRef>('bottomObserver');
   private observer: IntersectionObserver | null = null;
@@ -48,30 +55,65 @@ export class App implements OnDestroy {
       }
     });
 
-    this.searchControl.valueChanges.pipe(
-      takeUntilDestroyed()
-    ).subscribe(value => {
+    effect((onCleanup) => {
+      const photo = this.selectedPhoto();
+      const url = this.currentImageUrl();
+
+      if (!photo || !url) {
+        this.currentDimensions.set({ width: 0, height: 0 });
+        return;
+      }
+
+      const img = new Image();
+      let cancelled = false;
+
+      img.onload = () => {
+        if (cancelled) return;
+        this.currentDimensions.set({
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+        });
+      };
+
+      img.onerror = () => {
+        if (cancelled) return;
+        this.currentDimensions.set({ width: 0, height: 0 });
+      };
+
+      img.src = url;
+
+      onCleanup(() => {
+        cancelled = true;
+        img.onload = null;
+        img.onerror = null;
+      });
+    });
+
+    this.searchControl.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
       this.query.set(value);
     });
 
-    this.searchControl.valueChanges.pipe(
-      debounceTime(500),
-      distinctUntilChanged(),
-      takeUntilDestroyed()
-    ).subscribe(() => {
-      this.search();
-    });
+    this.searchControl.valueChanges
+      .pipe(debounceTime(500), distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe(() => {
+        this.search();
+      });
   }
 
   private setupObserver(el: HTMLElement) {
     this.observer?.disconnect();
     this.observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !this.loading() && !this.loadingMore() && this.page() < this.totalPages()) {
+        if (
+          entries[0].isIntersecting &&
+          !this.loading() &&
+          !this.loadingMore() &&
+          this.page() < this.totalPages()
+        ) {
           this.loadMore();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
     this.observer.observe(el);
   }
@@ -132,18 +174,36 @@ export class App implements OnDestroy {
     this.unsplashService.getPhotoDetails(photo.id).subscribe({
       next: (details) => {
         this.selectedPhoto.set(details);
+        this.currentImageUrl.set(details.urls.regular);
         this.loading.set(false);
       },
       error: (err) => {
         console.error('Error fetching photo details:', err);
         this.selectedPhoto.set(photo); // fallback to basic data
+        this.currentImageUrl.set(photo.urls.regular);
         this.loading.set(false);
       },
     });
   }
 
+  setImageUrl(size: keyof UnsplashPhoto['urls'], url: string) {
+    this.currentImageUrl.set(url);
+    this.currentSize.set(size);
+  }
+
+  resetImageUrl() {
+    const photo = this.selectedPhoto();
+    if (photo) {
+      this.currentImageUrl.set(photo.urls.regular);
+    }
+    this.currentSize.set('regular');
+  }
+
   closeModal() {
     this.selectedPhoto.set(null);
+    this.currentImageUrl.set(null);
+    this.currentSize.set('regular');
+    this.currentDimensions.set({ width: 0, height: 0 });
   }
 
   downloadPhoto(photo: UnsplashPhoto) {

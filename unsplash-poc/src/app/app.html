@@ -58,7 +58,7 @@
       <button class="close-btn" (click)="closeModal()" aria-label="Close modal">&times;</button>
       <div class="modal-body">
         <div class="modal-image">
-          <img [src]="photo.urls.regular" [alt]="photo.alt_description" />
+          <img [src]="currentImageUrl()" [alt]="photo.alt_description" />
         </div>
         <div class="modal-info">
           <h2>{{ photo.description || photo.alt_description || 'Untitled' }}</h2>
@@ -66,15 +66,23 @@
             <span class="method">GET</span>
             <span class="route">https://api.unsplash.com/photos/{{ photo.id }}</span>
           </div>
-          <p class="attribution">
-            Photo by
-            <a [href]="photo.user.links.html + '?utm_source=unsplash_poc&utm_medium=referral'" target="_blank">
-              {{ photo.user.name }}
-            </a>
-            on
-            <a href="https://unsplash.com/?utm_source=unsplash_poc&utm_medium=referral" target="_blank">
-              Unsplash
-            </a>
+
+          <div class="size-buttons">
+            <button class="size-btn" [class.active]="currentSize() === 'regular'" (click)="resetImageUrl()">
+              Default
+            </button>
+            @for (size of sizes; track $index) {
+              @if (photo.urls[size]) {
+                <button class="size-btn" [class.active]="currentSize() === size" (click)="setImageUrl(size, photo.urls[size])">
+                  {{ size }}
+                </button>
+              }
+            }
+          </div>
+
+          <p>
+            width: {{ currentDimensions().width }} px
+            & height: {{ currentDimensions().height }} px
           </p>
 
           <pre class="json-response"><code>{{ photo | json }}</code></pre>
@@ -87,6 +95,17 @@
               <span class="route">{{ photo.links.download_location }}</span>
             </div>
           </div>
+
+          <p class="attribution">
+            Photo by
+            <a [href]="photo.user.links.html + '?utm_source=unsplash_poc&utm_medium=referral'" target="_blank">
+              {{ photo.user.name }}
+            </a>
+            on
+            <a href="https://unsplash.com/?utm_source=unsplash_poc&utm_medium=referral" target="_blank">
+              Unsplash
+            </a>
+          </p>
         </div>
       </div>
     </div>
